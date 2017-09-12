@@ -32,15 +32,16 @@ class ParallelSplit():
                               fold_num=i,
                               method=self.method) for i in range(self.n_jobs))
 
-def _apply(df, func, axis):
-    return df.apply(func, axis=axis)
+def _apply(df, func, axis, **kwds):
+    return df.apply(func, axis=axis, **kwds)
 
-def parallel_apply(df, func, axis=1, n_jobs=1, verbose=0):
+def parallel_apply(df, func, axis=1, n_jobs=1, verbose=0, **kwds):
     split_axis = 1 - axis
     output = Parallel(n_jobs=n_jobs,
                       verbose=verbose)(
         delayed(_apply)(df.iloc[index, :] if axis==1 else df.iloc[:, index],
                         func,
-                        axis) for index in ParallelSplit(n_jobs,
+                        axis,
+                        **kwds) for index in ParallelSplit(n_jobs,
                                                          axis=split_axis).split(df))
     return pd.concat(output, axis=split_axis)
