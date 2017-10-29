@@ -133,45 +133,53 @@ def _prefix_genertor(grouping_column):
             pre_fix += (str(0) + '_')
     return pre_fix
 
-def _get_posterior(X,grouping_column,y,extra_labels=[]):
-    if isinstance(grouping_column,Iterable) and not isinstance(grouping_column,str):
-        groups = X.groupby([y]+grouping_column).size()
+def _get_posterior(X, grouping_column, y, extra_labels=[]):
+    if isinstance(grouping_column, Iterable) and not isinstance(grouping_column,str):
+        groups = X.groupby([y] + grouping_column).size()
     else:
-        groups = X.groupby([y]+[grouping_column]).size()
-    tmp = groups.unstack(level=0,fill_value=0)
+        groups = X.groupby([y] + [grouping_column]).size()
+    tmp = groups.unstack(level=0, fill_value=0)
     for additional_label in extra_labels:
         tmp[additional_label] = 0
     return tmp
 
 
-def CV_basian_encoding(grouping_column,label_to_use,train,y,test=None,fill_value=None,cv=None,inplace=False):
+def CV_basian_encoding(grouping_column, label_to_use, train, y, test=None, fill_value=None, cv=None, inplace=False):
     if not isinstance(y,np.ndarray):
         y = np.array(y)
     if cv is None:
-        cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=2016)
+        cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=888)
     elif isinstance(cv,int):
-        cv = StratifiedKFold(n_splits=cv, shuffle=True, random_state=2016)
+        cv = StratifiedKFold(n_splits=cv, shuffle=True, random_state=888)
     pre_fix = _prefix_genertor(grouping_column)
     if not isinstance(label_to_use,Iterable) or isinstance(label_to_use,str):
         label_to_use = [label_to_use]
         
     outputs = np.zeros((train.shape[0],len(label_to_use)))
-    prefixed_labes = [pre_fix+str(label) for label in label_to_use]
-    for train_index, test_index in cv.split(train,y):
-        tmp = _get_posterior(train.iloc[train_index],grouping_column,y[train_index])
-        tmp[prefixed_labes] = (tmp[label_to_use].T / tmp.sum(axis=1)).T
-        outputs[test_index] = train.iloc[test_index].merge(tmp[prefixed_labes], how = 'left', left_on = grouping_column, right_index=True)[prefixed_labes]
-    for i in range(len(prefixed_labes)):
-        train.loc[:,prefixed_labes[i]] = outputs[:,i]
+    prefixed_labels = [pre_fix + str(label) for label in label_to_use]
+    for train_index, test_index in cv.split(train, y):
+        tmp = _get_posterior(train.iloc[train_index],
+                             grouping_column,
+                             y[train_index])
+        tmp[prefixed_labels] = tmp[label_to_use].divide(tmp.sum(axis=1), axis=0)
+        outputs[test_index] = pd.merge(train.iloc[test_index],
+                                       tmp[prefixed_labels],
+                                       how='left', left_on=grouping_column,
+                                       right_index=True)[prefixed_labels]
+
+    for i in range(len(prefixed_labels)):
+        train.loc[:,prefixed_labels[i]] = outputs[:,i]
         if fill_value is not None:
-            train[prefixed_labes[i]].fillna(fill_value,inplace=True)
+            train[prefixed_labels[i]].fillna(fill_value,inplace=True)
+
     if test is not None:
-        tmp = _get_posterior(train,grouping_column,y)
-        tmp[prefixed_labes] = (tmp[label_to_use].T / tmp.sum(axis=1)).T
-        test  = test.merge(tmp[prefixed_labes], how = 'left', left_on = grouping_column, right_index=True)
+        tmp = _get_posterior(train, grouping_column, y)
+        tmp[prefixed_labels] = tmp[label_to_use].divide(tmp.sum(axis=1), axis=0)
+        test = test.merge(tmp[prefixed_labels], how='left',
+                          left_on=grouping_column, right_index=True)
         if fill_value is not None:
-            for i in range(len(prefixed_labes)):   
-                test[prefixed_labes[i]].fillna(fill_value,inplace=True)
+            for i in range(len(prefixed_labels)):   
+                test[prefixed_labels[i]].fillna(fill_value, inplace=True)
     return train, test
 
 def _get_grouped(X,grouping_column,method='min'):
@@ -180,21 +188,6 @@ def _get_grouped(X,grouping_column,method='min'):
     else:
         groups = X.groupby([grouping_column])
     return groups.min()
-
-def CV_grouping(df,grouping_column,target_coulmn,method='diff',cv=None,inplace=False):
-    if cv is None:
-        cv = KFold(n_splits=5, shuffle=True, random_state=2016)
-    elif isinstance(cv,int):
-        cv = KFold(n_splits=cv, shuffle=True, random_state=2016)
-    pre_fix = _prefix_genertor(grouping_column)
-    outputs = np.zeros((df.shape[0]))
-    for train_index, test_index in cv.split(df):
-        train = df.iloc[train_index]
-        test = df.iloc[test_index]
-        tmp = train.groupby(grouping_column)[target_coulmn].min().rename(target_coulmn + '_min')
-        outputs[test_index] = test[target_coulmn] - test.merge(tmp.to_frame(), how = 'left', left_on = grouping_column, right_index=True)[target_coulmn + '_min']
-    df[pre_fix + target_coulmn + '_' + method] = outputs
-    return df
 
 
 class CountEncoder(BaseEstimator, TransformerMixin):
@@ -219,7 +212,7 @@ class CountEncoder(BaseEstimator, TransformerMixin):
         else:
             return code
         
-def add_feature(df,cat,met,method='rank',asc_flg=True):
+def add_feature(df, cat, met, method='rank', asc_flg=True):
     if method == 'rank':
         return df.groupby(cat)[met].rank(method='average',pct=True,ascending=asc_flg)
     elif method == 'diff':
