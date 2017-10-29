@@ -22,6 +22,7 @@ def plot_residual(y_true, y_predict):
 
 
 def plot_roc(y_true,y_predict):
+    from sklearn.metrics import roc_curve, roc_auc_score
     fpr, tpr, _ = roc_curve(y_true,y_predict)
     plt.figure(figsize=(6,6))
     lw = 2
