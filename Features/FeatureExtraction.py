@@ -155,32 +155,38 @@ def CV_basian_encoding(grouping_column, label_to_use, train, y, test=None, fill_
     if not isinstance(label_to_use,Iterable) or isinstance(label_to_use,str):
         label_to_use = [label_to_use]
         
-    outputs = np.zeros((train.shape[0],len(label_to_use)))
+    train_code = np.zeros((train.shape[0], len(label_to_use)))
     prefixed_labels = [pre_fix + str(label) for label in label_to_use]
     for train_index, test_index in cv.split(train, y):
         tmp = _get_posterior(train.iloc[train_index],
                              grouping_column,
                              y[train_index])
         tmp[prefixed_labels] = tmp[label_to_use].divide(tmp.sum(axis=1), axis=0)
-        outputs[test_index] = pd.merge(train.iloc[test_index],
+        train_code[test_index] = pd.merge(train.iloc[test_index],
                                        tmp[prefixed_labels],
                                        how='left', left_on=grouping_column,
-                                       right_index=True)[prefixed_labels]
+                                       right_index=True)[prefixed_labels].values
 
-    for i in range(len(prefixed_labels)):
-        train.loc[:,prefixed_labels[i]] = outputs[:,i]
-        if fill_value is not None:
-            train[prefixed_labels[i]].fillna(fill_value,inplace=True)
+    train_code = pd.DataFrame(train_code,
+                              columns=prefixed_labels,
+                              index=train.index)
+    if fill_value is not None:
+        train_code.fillna(fill_value, inplace=True)
 
+    test_code = None
     if test is not None:
+        test_code = np.zeros((test.shape[0], len(label_to_use)))
         tmp = _get_posterior(train, grouping_column, y)
         tmp[prefixed_labels] = tmp[label_to_use].divide(tmp.sum(axis=1), axis=0)
-        test = test.merge(tmp[prefixed_labels], how='left',
-                          left_on=grouping_column, right_index=True)
+        test_code[:] = test.merge(tmp[prefixed_labels], how='left',
+                          left_on=grouping_column,
+                          right_index=True)[prefixed_labels].values
+        test_code = pd.DataFrame(test_code,
+                                 columns=prefixed_labels,
+                                 index=test.index)
         if fill_value is not None:
-            for i in range(len(prefixed_labels)):   
-                test[prefixed_labels[i]].fillna(fill_value, inplace=True)
-    return train, test
+            test_code.fillna(fill_value, inplace=True)
+    return train_code, test_code
 
 def _get_grouped(X,grouping_column,method='min'):
     if isinstance(grouping_column,Iterable) and not isinstance(grouping_column,str):
