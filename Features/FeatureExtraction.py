@@ -92,9 +92,9 @@ class HCCTransformer(BaseEstimator, TransformerMixin):
             randoms = (1 +
                        (np.random.uniform(size=group_count.shape[0]) - 0.5)
                        * self.alpha)
-            group_count[self.pre_fix+str(label)] = weight * randoms
+            group_count[self.pre_fix + str(label)] = weight * randoms
         
-        self.mapping_ = group_count[[self.pre_fix+str(label) for label in self.label_to_use]]
+        self.mapping_ = group_count[[self.pre_fix + str(label) for label in self.label_to_use]]
         if self.low_observations is not None and self.fill_value != 'global':
             if isinstance(self.low_observations,float):
                 observation_count = record_count.quantile(self.low_observations)
@@ -114,7 +114,8 @@ class HCCTransformer(BaseEstimator, TransformerMixin):
         if isinstance(self.fill_value, int) \
         or isinstance(self.fill_value, float):
             for label in self.label_to_use:
-                _X[self.pre_fix+str(label)].fillna(self.fill_value,inplace=True)
+                _X[self.pre_fix+str(label)].fillna(self.fill_value,
+                                                   inplace=True)
         else:
             for label in self.label_to_use:
                 _X[self.pre_fix + str(label)].fillna(self.global_ratio[label],
@@ -129,7 +130,7 @@ class HCCTransformer(BaseEstimator, TransformerMixin):
                     or isinstance(column,int) \
                     or isinstance(column,float):
                         column_name = column
-                    elif isinstance(column,pd.Series):
+                    elif isinstance(column, pd.Series):
                         column_name = column.name
                     else:
                         continue
