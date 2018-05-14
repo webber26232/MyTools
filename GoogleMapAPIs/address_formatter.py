@@ -86,9 +86,7 @@ if __name__=='__main__':
     train = pd.read_json('train.json')
     test = pd.read_json('test.json')
     df = pd.concat([train,test],axis=0)
-    keys=['AIzaSyC1ugNifJdJgT38RRsa2cRfNpjifzQXKCU','AIzaSyBsXZFvuHxXKfedMpX3ajutUeNeE7QBIek',
-    'AIzaSyA02G2uESQ7KxAh7p2PLWKZsuDZtoXGq4Y','AIzaSyDGCcRGIN1BVOjZgKJSp3Fsd3OWhxXmFNc',
-    'AIzaSyB0rPy6zkks-wI_58OLHFjDeQTxZOMAQTg','AIzaSyAwTDeBH-jobd4vU2HLqUL9vri59lHGTUc']
+    keys=[]
     n_jobs = 20
     retry_times = 5
     format_adrs(df.street_address,'New York',keys,retry_times,n_jobs)
