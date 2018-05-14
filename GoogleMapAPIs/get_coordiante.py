@@ -49,7 +49,7 @@ def _get_coordinate(url,keys,keyI,attempt_time=1):
     
 if __name__ == '__main__':
     adrsTable = pd.read_csv('fmtedAddress.csv')
-    keys=['AIzaSyC1ugNifJdJgT38RRsa2cRfNpjifzQXKCU','AIzaSyBsXZFvuHxXKfedMpX3ajutUeNeE7QBIek','AIzaSyA02G2uESQ7KxAh7p2PLWKZsuDZtoXGq4Y','AIzaSyDGCcRGIN1BVOjZgKJSp3Fsd3OWhxXmFNc']
+    keys=[]
     n_jobs = 10
     l = []
     
