@@ -107,9 +107,7 @@ if __name__=='__main__':
     n_jobs=30
     #df = pd.read_csv('cood.csv',encoding='gbk')
     df = pd.read_csv('cood_with_ambs.csv',encoding='gbk')
-    keys=['AIzaSyC1ugNifJdJgT38RRsa2cRfNpjifzQXKCU','AIzaSyBsXZFvuHxXKfedMpX3ajutUeNeE7QBIek',
-        'AIzaSyA02G2uESQ7KxAh7p2PLWKZsuDZtoXGq4Y','AIzaSyDGCcRGIN1BVOjZgKJSp3Fsd3OWhxXmFNc',
-        'AIzaSyB0rPy6zkks-wI_58OLHFjDeQTxZOMAQTg','AIzaSyAwTDeBH-jobd4vU2HLqUL9vri59lHGTUc']
+    keys=[]
     ifm_dict = {'convenience_store':[500],
     'home_goods_store':[500],
     'department_store':[2000],
